@@ -14,8 +14,9 @@ from random import uniform, randrange
 from pynput.keyboard import Controller
 import pyautogui
 import threading
-from os.path import join
-from os import getcwd, getlogin
+from os import path
+from os import getcwd, getlogin, listdir
+import psutil
 
 from selenium_option import selenium_option
 
@@ -27,6 +28,23 @@ class selenium_driver():
 
     def create_driver(self):
         cur_config = self.options._config
+
+        # get executable driver absolute path
+        folder_path = ""
+        if cur_config['folder_path'] != "":
+            folder_path = cur_config['folder_path']
+        else:
+            folder_path = path.join(path.dirname(path.realpath(__file__)), cur_config['browser_name'])
+
+        file_lists = listdir(folder_path)
+        self.driver_path = ""
+        for file_item in file_lists:
+            if file_item[-3:] == 'exe':
+                self.driver_path = path.join(folder_path, file_item)               
+        if self.driver_path == "":
+            self.print_log("driver name not found")
+            return None
+            
         if cur_config['browser_name'] == "chrome":
             # settings for chrome
             chrome_options = Options()
@@ -56,8 +74,8 @@ class selenium_driver():
                 chrome_options.add_argument('--proxy-server=' + cur_config['cur_proxy'])
             else:
                 self.print_log("Now opening Google Chrome with no proxy...")
-                
-            driver = wd.Chrome(executable_path = join(getcwd(), 'chrome/chromedriver.exe'), options=chrome_options)
+            
+            driver = wd.Chrome(executable_path = self.driver_path, options=chrome_options)            
             
         elif cur_config['browser_name'] == "firefox":
             # create firefox options
@@ -82,10 +100,11 @@ class selenium_driver():
                     'sslProxy': cur_config['cur_proxy']        
                 }
                 self.print_log("Now opening Firefox browser...")
-                driver = wd.Firefox(executable_path='firefox/geckodriver.exe', capabilities = firefox_capabilities, options=options, firefox_profile=firefox_profile)
+                driver = wd.Firefox(executable_path = self.driver_path, capabilities = firefox_capabilities, options=options, firefox_profile=firefox_profile)
             else:
                 self.print_log("Now opening Firefox browser with no proxy...")
-                driver = wd.Firefox(executable_path='firefox/geckodriver.exe', options=options, firefox_profile=firefox_profile)
+                driver = wd.Firefox(executable_path=self.driver_path, options=options, firefox_profile=firefox_profile)
+
             if cur_config['is_maximized']:
                 driver.maximize_window()
             
@@ -97,13 +116,17 @@ class selenium_driver():
             driver.set_window_position(cur_config['window_pos'][0], cur_config['window_pos'][1])
         return driver
 
-    def open_driver(self, cur_url, delay_time):
+    # open url in broser, delay time is the limit time for the broswer will wait for responses
+    def open_url(self, cur_url, delay_time = 60):
         if self.driver:
             self.driver.set_page_load_timeout(delay_time)
             try:
-                self.driver.get(cur_url)
+                self.driver.get(cur_url)                
             except TimeoutException:
                 self.print_log("Too much time taken to open {0}".format(cur_url))                
+                return False
+            except:
+                self.print_log("Something went wrong. Please check the web driver version")
                 return False
             self.print_log("Successfully opened the url : {0}".format(cur_url))
             return True
@@ -186,6 +209,55 @@ class selenium_driver():
             self.wait_between(start_delay, end_delay)
         self.wait_between(0.5, 1)
 
+    # get web element rect
+    def get_element_rect(self, cur_element):
+        browser_navigation_panel_height = self.driver.execute_script('return window.outerHeight - window.innerHeight;')    
+        cur_x = cur_element.location['x']
+        cur_y = cur_element.location['y'] + browser_navigation_panel_height
+        cur_size = cur_element.size
+        return [cur_x, cur_y, cur_size['width'], cur_size['height']]
+
+    # mouse move to the element
+    def move_to_element(self, element):
+        hov = ActionChains(self.driver).move_to_element(element)
+        hov.perform()
+
+    # select select box
+    def select_some_option(self, select_str, option_str):
+        
+        select_item = self.find_tag(self.driver, select_str, 0.6)
+        select_item.click()
+        print("select box {0} clicked".format(select_str))
+
+        self.wait_between(0.5, 0.7)
+        option_item = select_item.find_element_by_css_selector(option_str)
+        option_item.click()
+        print("option {0} clicked".format(option_str))
+
+    # scroll down to element
+    def scroll_down_to(self, element):
+        self.driver.execute_script("arguments[0].scrollIntoView", element)
+        self.wait_between(0.8, 1)
+
+    # wait for element to be enabled
+    def wait_until_enabled(self, element, wait_time = 1.0):
+        while True:
+            self.wait_between(wait_time - 0.2, wait_time + 0.2)
+            if element.is_enabled():
+                break
+        return
+
+    # wait beween two times
     def wait_between(self, a, b):
         rand = uniform(a, b) 
         sleep(rand)
+
+    def close_driver(self):
+        # now close driver
+        if self.driver:
+            self.driver.close()
+            self.driver.quit()
+            self.print_log('quit the driver')
+
+    def __del__(self):        
+        self.print_log("Now closing, bye... ^0^")

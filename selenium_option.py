@@ -6,7 +6,8 @@ conf = {
     'img_loaded': True,                 # whether image is loaded or not
     'browser_name': 'chrome',           # chrome or firefox
     'cur_proxy' : '',                   # eg. 173.192.170.97:5329
-    'window_pos' : [0, 0]               # browser window position
+    'window_pos' : [0, 0],              # browser window position
+    'folder_path' : ""                  # absolute folder path of selenium driver execution file
 }
 
 class selenium_option(object):

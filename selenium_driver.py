@@ -231,7 +231,7 @@ class selenium_driver():
         hov = ActionChains(self.driver).move_to_element(element)
         hov.perform()
 
-    # select select box
+    # select options in the selector
     def select_some_option(self, select_str, option_str):
         
         select_item = self.find_tag(self.driver, select_str, 0.6)

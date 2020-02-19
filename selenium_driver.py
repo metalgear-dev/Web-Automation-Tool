@@ -20,6 +20,11 @@ import psutil
 
 from selenium_option import selenium_option
 
+# wait beween two times
+def wait_between(a, b):
+    rand = uniform(a, b) 
+    sleep(rand)
+
 class selenium_driver():
     def __init__(self, initial_option):
         self.options = selenium_option(initial_conf=initial_option)
@@ -44,6 +49,8 @@ class selenium_driver():
         if self.driver_path == "":
             self.print_log("driver name not found")
             return None
+        else:
+            self.print_log("your driver exe path is {0}".format(self.driver_path))
             
         if cur_config['browser_name'] == "chrome":
             # settings for chrome
@@ -125,8 +132,10 @@ class selenium_driver():
             except TimeoutException:
                 self.print_log("Too much time taken to open {0}".format(cur_url))                
                 return False
-            except:
-                self.print_log("Something went wrong. Please check the web driver version")
+            except Exception as e:
+                self.print_log("Error Occured")
+                print(e)
+                self.print_log("Something went wrong. Please check the error!")
                 return False
             self.print_log("Successfully opened the url : {0}".format(cur_url))
             return True
@@ -176,7 +185,7 @@ class selenium_driver():
                 print("Could not find the tag")
                 return None
             if wait_time > 0.2:
-                self.wait_between(wait_time - 0.2, wait_time + 0.2)
+                wait_between(wait_time - 0.2, wait_time + 0.2)
             print("waiting tag {0}...".format(tag_str))
             try:
                 cur_tag = self.driver.find_element_by_css_selector(tag_str)        
@@ -198,7 +207,7 @@ class selenium_driver():
         
         pyautogui.click(center_x + randrange(-offset_x, offset_x), center_y + randrange(-offset_y, offset_y))
         print("clicked the element")
-        self.wait_between(0.5, 1)
+        wait_between(0.5, 1)
 
     # type something in input dom tag 
     def type_content(self, cur_content, start_delay = 0.03, end_delay = 0.05):
@@ -206,8 +215,8 @@ class selenium_driver():
         for char in cur_content:
             keyboard.press(char)
             keyboard.release(char)
-            self.wait_between(start_delay, end_delay)
-        self.wait_between(0.5, 1)
+            wait_between(start_delay, end_delay)
+        wait_between(0.5, 1)
 
     # get web element rect
     def get_element_rect(self, cur_element):
@@ -229,7 +238,7 @@ class selenium_driver():
         select_item.click()
         print("select box {0} clicked".format(select_str))
 
-        self.wait_between(0.5, 0.7)
+        wait_between(0.5, 0.7)
         option_item = select_item.find_element_by_css_selector(option_str)
         option_item.click()
         print("option {0} clicked".format(option_str))
@@ -237,20 +246,15 @@ class selenium_driver():
     # scroll down to element
     def scroll_down_to(self, element):
         self.driver.execute_script("arguments[0].scrollIntoView", element)
-        self.wait_between(0.8, 1)
+        wait_between(0.8, 1)
 
     # wait for element to be enabled
     def wait_until_enabled(self, element, wait_time = 1.0):
         while True:
-            self.wait_between(wait_time - 0.2, wait_time + 0.2)
+            wait_between(wait_time - 0.2, wait_time + 0.2)
             if element.is_enabled():
                 break
         return
-
-    # wait beween two times
-    def wait_between(self, a, b):
-        rand = uniform(a, b) 
-        sleep(rand)
 
     def close_driver(self):
         # now close driver
@@ -261,3 +265,5 @@ class selenium_driver():
 
     def __del__(self):        
         self.print_log("Now closing, bye... ^0^")
+
+    

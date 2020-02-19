@@ -1,4 +1,4 @@
-# custom-selenium-tool
+# Web Automation Using Selenium
 
 ### Summary
 This project is for automating using selenium.

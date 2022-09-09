@@ -2,12 +2,13 @@
 from selenium_driver import selenium_driver, wait_between
 from selenium_driver import Keys
 
+
 def main():
     # this option should be like the variable 'conf' in selenium_option.py file
     # but you need to define some of them if you want them to be changed
     my_options = {
-        'driver_name' : 'MyExampleDriver',         # your driver name
-        'browser_name' : 'chrome'
+        'driver_name': 'MyExampleDriver',         # your driver name
+        'browser_name': 'chrome'
     }
 
     # create and open browser
@@ -24,9 +25,7 @@ def main():
             input_tag.send_keys('selenium')
             wait_between(0.5, 0.8)
             input_tag.send_keys(Keys.ENTER)
-            wait_between(3,5)
-
-
+            wait_between(3, 5)
 
 
 if __name__ == "__main__":
